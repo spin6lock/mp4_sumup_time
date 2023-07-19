@@ -6,11 +6,10 @@ import cv2
 import dbm
 
 
-def found_media_on_dir():
+def found_media_on_dir(path):
     all_result = []
-    for path in config.paths:
-        result = glob.glob(path + "*.MP4", recursive = True)
-        all_result.extend(result)
+    result = glob.glob(path + "*.MP4", recursive = True)
+    all_result.extend(result)
     return all_result
 
 
@@ -26,6 +25,9 @@ def sumup(all_video):
             data = cv2.VideoCapture(video)
             frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
             fps = data.get(cv2.CAP_PROP_FPS)
+            if fps == 0:
+                print(f"fps is zero:{video}")
+                fps = 30
             duration = round(frames / fps)
             db[video] = str(duration)
             total = total + duration
@@ -39,13 +41,18 @@ def convert(seconds):
     remain_minutes = minutes % 60
     return hours, remain_minutes, minutes
 
-def main():
-    media = found_media_on_dir()
+def sumup_one_dir(path):
+    media = found_media_on_dir(path)
     all_seconds = sumup(media)
     hours, remain_minutes, minutes = convert(all_seconds)
-    print("视频时长：{}秒".format(all_seconds))
-    print("或：{}分".format(minutes))
-    print("或：{}时{}分".format(hours, remain_minutes))
+    print(f"{path} 视频时长：{all_seconds}秒")
+    print(f"或：{minutes}分")
+    print(f"或：{hours}时{remain_minutes}分")
+
+
+def main():
+    for path in config.paths:
+        sumup_one_dir(path)
 
 
 if __name__ == "__main__":
